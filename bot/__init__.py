@@ -1,3 +1,4 @@
+import datetime
 import logging
 import os
 import threading
@@ -5,6 +6,7 @@ import time
 import random
 import string
 import subprocess
+import pytz
 import requests
 
 import aria2p
@@ -12,6 +14,7 @@ import qbittorrentapi as qba
 import telegram.ext as tg
 from dotenv import load_dotenv
 from pyrogram import Client
+from telegram import ParseMode
 from telegraph import Telegraph
 
 import psycopg2
@@ -50,7 +53,7 @@ SERVER_PORT = os.environ.get('SERVER_PORT', None)
 PORT = os.environ.get('PORT', SERVER_PORT)
 web = subprocess.Popen([f"gunicorn wserver:start_server --bind 0.0.0.0:{PORT} --worker-class aiohttp.GunicornWebWorker"], shell=True)
 time.sleep(1)
-alive = subprocess.Popen(["python3", "alive.py"])
+#alive = subprocess.Popen(["python3", "alive.py"])
 subprocess.run(["mkdir", "-p", "qBittorrent/config"])
 subprocess.run(["cp", "qBittorrent.conf", "qBittorrent/config/qBittorrent.conf"])
 subprocess.run(["qbittorrent-nox", "-d", "--profile=."])
@@ -418,3 +421,43 @@ if os.path.exists('drive_folder'):
 updater = tg.Updater(token=BOT_TOKEN)
 bot = updater.bot
 dispatcher = updater.dispatcher
+
+
+def alive():
+    IST = pytz.timezone('Asia/Kolkata')
+    ALERT_IS_SENT = False
+    try:
+        BASE_URL = os.environ.get('BASE_URL_OF_BOT', None)
+        PING_INTERVAL = int(getConfig('PING_INTERVAL')) * 60
+        SLEEP_START_DAY = int(getConfig('SLEEP_START_DAY'))
+        SLEEP_DAYS = int(getConfig('SLEEP_DAYS'))
+        if len(BASE_URL) == 0:
+            BASE_URL = None
+    except:
+        BASE_URL = None
+        PING_INTERVAL = 600
+        SLEEP_START_DAY = 1
+        SLEEP_DAYS = 9
+    PORT = os.environ.get('PORT', None)
+    if PORT is not None and BASE_URL is not None:
+        LOGGER.info(f"{datetime.datetime.now(IST).strftime('%Y-%m-%d %H:%M:%S')}: Alive function started")
+        while True:
+            CUR_DAY = int(datetime.datetime.now(IST).strftime("%-d"))
+            WAKEUP_DATE = datetime.datetime.now(IST) + datetime.timedelta(days=SLEEP_DAYS)
+            text_msg = f"<b>Hey Guys!\nI am going to sleep for <code>{SLEEP_DAYS}</code> days after few " \
+                       f"minutes.\nWill wakeup on <code>{WAKEUP_DATE.strftime('%-d %b')}</code>.\nBut my bro " \
+                       f"<code>CyberLoki</code> will be available.\nGood bye..see you soon.</b> "
+            if CUR_DAY != SLEEP_START_DAY:
+                status = requests.get(BASE_URL).status_code
+                LOGGER.info(f"{datetime.datetime.now(IST).strftime('%Y-%m-%d %H:%M:%S')}: {BASE_URL} Status: {status}")
+            else:
+                try:
+                    if AUTHORIZED_CHATS and not ALERT_IS_SENT:
+                        for i in AUTHORIZED_CHATS:
+                            bot.sendMessage(chat_id=i, text=text_msg, parse_mode=ParseMode.HTML)
+                        LOGGER.info(f"{datetime.datetime.now(IST).strftime('%Y-%m-%d %H:%M:%S')}: Bot is going to sleep")
+                        ALERT_IS_SENT = True
+                        break
+                except Exception as e:
+                    LOGGER.error(e)
+            time.sleep(PING_INTERVAL)
