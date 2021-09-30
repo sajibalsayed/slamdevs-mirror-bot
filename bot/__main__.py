@@ -2,7 +2,7 @@ import shutil, psutil
 import signal
 import os
 import asyncio
-
+import threading
 from pyrogram import idle
 from sys import executable
 
@@ -70,7 +70,7 @@ def restart(update, context):
         f.truncate(0)
         f.write(f"{restart_message.chat.id}\n{restart_message.message_id}\n")
     fs_utils.clean_all()
-    alive.terminate()
+    #alive.terminate()
     web.terminate()
     os.execl(executable, executable, "-m", "bot")
 
@@ -241,6 +241,8 @@ def main():
         except Exception as e:
             LOGGER.warning(e)
     # bot.set_my_commands(botcmds)
+    pinger = threading.Thread(target=alive)
+    pinger.start()
     start_handler = CommandHandler(BotCommands.StartCommand, start, run_async=True)
     ping_handler = CommandHandler(BotCommands.PingCommand, ping,
                                   filters=CustomFilters.authorized_chat | CustomFilters.authorized_user, run_async=True)
