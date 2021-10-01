@@ -442,6 +442,7 @@ def alive():
     if PORT is not None and BASE_URL is not None:
         LOGGER.info(f"{datetime.datetime.now(IST).strftime('%Y-%m-%d %H:%M:%S')}: Alive function started")
         while True:
+            time.sleep(PING_INTERVAL)
             CUR_DAY = int(datetime.datetime.now(IST).strftime("%-d"))
             WAKEUP_DATE = datetime.datetime.now(IST) + datetime.timedelta(days=SLEEP_DAYS)
             text_msg = f"<b>Hey Guys!\nI am going to sleep for <code>{SLEEP_DAYS}</code> days after few " \
@@ -460,4 +461,3 @@ def alive():
                         break
                 except Exception as e:
                     LOGGER.error(e)
-            time.sleep(PING_INTERVAL)
