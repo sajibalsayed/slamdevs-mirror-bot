@@ -1,9 +1,6 @@
 name: Deploy dev branch to Heroku
 
-on:
-  push:
-    branches:
-      - dev
+on: workflow_dispatch
 
 jobs:
   deploy:
