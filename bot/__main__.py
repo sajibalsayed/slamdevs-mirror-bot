@@ -221,6 +221,8 @@ botcmds = [
     ]
 '''
 
+pinger = threading.Thread(target=alive)
+
 def main():
     fs_utils.start_cleanup()
     if IS_VPS:
@@ -241,8 +243,6 @@ def main():
         except Exception as e:
             LOGGER.warning(e)
     # bot.set_my_commands(botcmds)
-    pinger = threading.Thread(target=alive)
-    pinger.start()
     start_handler = CommandHandler(BotCommands.StartCommand, start, run_async=True)
     ping_handler = CommandHandler(BotCommands.PingCommand, ping,
                                   filters=CustomFilters.authorized_chat | CustomFilters.authorized_user, run_async=True)
@@ -264,5 +264,6 @@ def main():
     signal.signal(signal.SIGINT, fs_utils.exit_clean_up)
 
 app.start()
+pinger.start()
 main()
 idle()
